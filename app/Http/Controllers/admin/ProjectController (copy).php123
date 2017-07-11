@@ -1,0 +1,541 @@
+<?php
+
+namespace App\Http\Controllers\admin;
+
+use Illuminate\Http\Request;
+
+use App\Http\Requests;
+use App\Http\Controllers\Controller;
+use App\County, App\Category, App\Type;
+use App\Project, App\Company, App\Specs_category, App\Specs, App\Users, App\Plan_category, App\Plan, App\City, App\State, App\Contractor;
+use \Validator,\Redirect;
+class ProjectController extends Controller
+{
+    public function lists(Request $request){
+        $data['keyword']        = '';
+        $data['counties']       = '';
+        $data['types']          = '';
+        $data['categories']     = '';
+        if($request->keyword !='' || $request->counties != '' || $request->types != '' || $request->categories != ''){
+            $data['keyword']            = $request->keyword;
+            $data['counties']           = $request->counties;
+            $data['types']              = $request->types;
+            $data['categories']         = $request->categories;
+            $data['lists'] = Project::select('projects.bid_close_date','projects.id','projects.project_id','projects.name as project_name','projects.status','counties.name as county_name','categories.name as category_name','types.name as type_name')
+                            ->leftjoin('counties', 'counties.id', '=', 'projects.county_id')
+                            ->leftjoin('categories', 'categories.id', '=', 'projects.category_id')
+                            ->leftjoin('types', 'types.id', '=', 'projects.type_id')
+                            ->where(function($query) use ($data) {
+                                if($data['counties'] != ''){
+                                $query->where('counties.id',$data['counties']);
+                                }
+                                if($data['categories'] != ''){
+                                $query->where('categories.id',$data['categories']);
+                                }
+                                if($data['types'] != ''){
+                                $query->where('types.id',$data['types']);
+                                }
+                                
+                                if($data['keyword'] != ''){
+                                $query->where('projects.name','like','%'.$data['keyword'].'%');
+                                $query->orWhere('projects.status','like','%'.$data['keyword'].'%');
+                                $query->orWhere('projects.project_id','like','%'.$data['keyword'].'%');
+                                }
+                            })
+                            ->orderBy('projects.updated_at','desc')->paginate(10);
+        }
+        else{
+            $data['lists'] = Project::select('projects.bid_close_date','projects.id','projects.project_id','projects.name as project_name','projects.status','counties.name as county_name','categories.name as category_name','types.name as type_name')->leftjoin('counties', 'counties.id', '=', 'projects.county_id')->leftjoin('categories', 'categories.id', '=', 'projects.category_id')->leftjoin('types', 'types.id', '=', 'projects.type_id')->orderBy('projects.updated_at','desc')->paginate(10);
+        
+        }
+        
+        $data['category']       = [''=>'Select Category'] + Category::pluck('name','id')->all();
+        $data['type']           = [''=>'Select Type'] + Type::pluck('name','id')->all();
+        $data['county']         = [''=>'Select County'] + County::pluck('name','id')->all();
+        
+        return view('admin.project.list',$data);
+    }
+    
+    public function create(){
+        $data                   = array();
+        $data['category']       = [''=>'Select Category'] + Category::pluck('name','id')->all();
+        $data['type']           = [''=>'Select Type'] + Type::pluck('name','id')->all();
+        return view('admin.project.create',$data);
+    }
+    
+    public function store(Request $request){
+        $validator = Validator::make($request->all(),
+                                     ['name'            => 'required',
+                                      'category_id'     => 'required',
+                                      'type_id'         => 'required',
+                                      'bid_close_date'  => 'required',
+                                      'time_due'        => 'required',
+                                      'valuation'       => 'required',
+                                      'description'     => 'required',
+                                      'documents'       => 'mimes:pdf']);
+        if($validator->fails()){
+            $message = $validator->messages();
+            return Redirect::back()->withErrors($validator)->withInput();
+        }else{
+            
+            
+            $project                            = new Project;
+            $project->name                      = $request->name;
+            $project->category_id               = $request->category_id;
+            $project->type_id                   = $request->type_id;
+            $bid_close_date                     = explode('/',$request->bid_close_date);
+            $project->bid_close_date            = $bid_close_date[2].'-'.$bid_close_date[0].'-'.$bid_close_date[1];
+            $project->time_due                  = date('H:i:s',strtotime($request->time_due));
+            
+            if($request->pre_bid_meeting_date != ''){
+            $pre_bid_meeting_date               = explode('/',$request->pre_bid_meeting_date);
+            $project->pre_bid_meeting_date      = $pre_bid_meeting_date[2].'-'.$pre_bid_meeting_date[0].'-'.$pre_bid_meeting_date[1];
+            }
+            $project->pre_bid_meeting_time      = ($request->pre_bid_meeting_time !='')?date('H:i:s',strtotime($request->pre_bid_meeting_time)):'';
+            $project->valuation                 = $request->valuation;
+            $project->description               = $request->description;
+            $project->additional_comments       = $request->additional_comments;
+            
+            if ($request->hasFile('documents')) {
+                $extension = $request->documents->getClientOriginalExtension();
+                $filename = time().'.' . $extension;
+                $request->documents->move(public_path('uploads/project/documents/'), $filename);
+                $project->documents = $filename;
+            }
+            $project->save();
+            
+            $project->project_id                = 1000+$project->id;
+            $project->save();
+
+            $company                            = new Company;
+            $company->project_id                = $project->id;
+            $company->save();
+            
+            return Redirect::route('admin_project_awarded_to',array($project->id))->with('success','Details Added Successfully!');
+        }
+    }
+    
+    public function awarded_to(Request $request,$id){
+        $data = array();
+        $project                            = Project::find($id);
+        if($request->action == "Process"){
+            if($request->awarded_to != ''){
+                $project->awarded_to                = $request->awarded_to;
+                $project->status                    = 'Awarded';
+            }else{
+                $project->status                    = ($project->status == 'Awarded')?'Bidding':$project->status;
+            }
+            $project->save();
+           return Redirect::route('admin_project_address',[$project->id])->with('success','Awarded Updated successfully!');
+        }
+
+        $data['projectDetails'] = $project;
+        $data['user']           = [''=>'Select User'] + Users::select('id', \DB::raw('CONCAT(first_name, " ", last_name) AS full_name'))->pluck('full_name','id')->all();
+        return view('admin.project.awarded_to',$data);
+    }
+    
+    public function address_update(Request $request, $id){
+        $data                   = array();
+        $data['county']         = [''=>'Select County'] + County::pluck('name','id')->all();
+        $project                = Project::find($id);
+        if($request->action == "Process"){
+            
+            $validator = Validator::make($request->all(),
+                                            ['city'            => 'required',
+                                             'county_id'       => 'required',
+                                             'state'           => 'required',
+                                             'zip'             => 'required']);
+               if($validator->fails()){
+                   $message = $validator->messages();
+                   return Redirect::back()->withErrors($validator)->withInput();
+               }else{
+                   $project->street                    = $request->street;
+                   $project->city                      = $request->city;
+                   $project->state                     = $request->state;
+                   $project->county_id                 = $request->county_id;
+                   $project->zip                       = $request->zip;
+                   $project->save();
+                   return Redirect::route('admin_project_principle',[$project->id])->with('success','Address Updated successfully');
+                }
+        }
+        $data['projectDetails'] = $project;
+        $data['city']           = [''=>'Select City'] + City::pluck('city','id')->all();
+        $data['state']          = [''=>'Select State'] + State::pluck('state','id')->all();
+        return view('admin.project.address',$data);
+    }
+    
+    
+    public function principle_update(Request $request, $id){
+        $data                   = array();
+        if($request->action == "Process"){
+            
+            $validator = Validator::make($request->all(),
+                                            ['company_name'    => 'required',
+                                             'user_name'       => 'required',
+                                             'address'         => 'required',
+                                             'city'            => 'required',
+                                             'state'           => 'required',
+                                             'zip'             => 'required',
+                                             'phone'           => 'required',
+                                             'email'           => 'required|email' ]);
+               if($validator->fails()){
+                   $message = $validator->messages();
+                   return Redirect::back()->withErrors($validator)->withInput();
+               }else{
+                   $company                            = Company::where('project_id',$id)->first();
+                   $company->company_name              = $request->company_name;
+                   $company->user_name                 = $request->user_name;
+                   $company->address                   = $request->address;
+                   $company->city                      = $request->city;
+                   $company->state                     = $request->state;
+                   $company->zip                       = $request->zip;
+                   $company->phone                     = $request->phone;
+                   $company->fax                       = $request->fax;
+                   $company->email                     = $request->email;
+                   $company->save();
+                   return Redirect::route('admin_project_contractor',[$id])->with('success','Principle details updated successfully');
+                }
+        }
+        $data['city']           = [''=>'Select City'] + City::pluck('city','id')->all();
+        $data['state']          = [''=>'Select State'] + State::pluck('state','id')->all();
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.principle',$data);
+    }
+    
+    public function contractor_update(Request $request , $id){
+        $data                           = array();
+        $project                        = Project::find($id);
+        if($request->action == "Process"){
+            $validator = Validator::make($request->all(),['contractor'   => 'required']);
+            if($validator->fails()){
+               $message = $validator->messages();
+               return Redirect::back()->withErrors($validator)->withInput();
+            }else{
+                    
+                if($request->contractor == 'other'){
+                    $validator = Validator::make($request->all(),
+                                                ['business_name'   => 'required',
+                                                 'name'            => 'required',
+                                                 'street'          => 'required',
+                                                 'city'            => 'required',
+                                                 'state'           => 'required',
+                                                 'zip'             => 'required',
+                                                 'phone'           => 'required',
+                                                 'email'           => 'email' ]);
+                    if($validator->fails()){
+                       $message = $validator->messages();
+                       return Redirect::back()->withErrors($validator)->withInput();
+                    }else{
+                       $contractor                            = new Contractor;
+                       $contractor->business_name             = $request->business_name;
+                       $contractor->name                      = $request->name;
+                       $contractor->street                    = $request->street;
+                       $contractor->city                      = $request->city;
+                       $contractor->state                     = $request->state;
+                       $contractor->zip                       = $request->zip;
+                       $contractor->phone                     = $request->phone;
+                       $contractor->fax                       = $request->fax;
+                       $contractor->email                     = $request->email;
+                       $contractor->save();
+                       $project->contractor_id = $contractor->id;
+                    }
+                }else{
+                    $project->contractor_id  = $request->contractor;
+                }
+                $project->save();
+                return Redirect::route('admin_project_plans',[$id])->with('success','Contractor details updated successfully');
+            }
+        }
+        $data['projectDetails']         = $project;
+        $data['city']                   = [''=>'Select City'] + City::pluck('city','id')->all();
+        $data['state']                  = [''=>'Select State'] + State::pluck('state','id')->all();
+        $data['contractor']             = [''=>'Select Contractor'] + Contractor::pluck('name','id')->all() + ['other'=>'Other'];
+    
+        return view('admin.project.contractor',$data);
+    }
+    public function plan_update(Request $request, $id){
+        $data                   = array();
+        if($request->action == "Process"){
+            
+                foreach($request->option as $opt){
+                    $category_id = $opt['plan_category'];
+                    for($i=0;$i<count($opt['plan_name']);$i++){
+                        if(array_key_exists('plan_id',$opt) && array_key_exists($i,$opt['plan_id'])){
+                            $plan                            = Plan::find($opt['plan_id'][$i]);
+                            if (array_key_exists('file_name',$opt) && array_key_exists($i,$opt['file_name'])) {
+                                
+                                if(file_exists(public_path('uploads/project/plan/'.$plan->file_name)) && $plan->file_name != ''){
+                                    unlink(public_path('uploads/project/plan/'.$plan->file_name));
+                                }
+                                $extension          = $opt['file_name'][$i]->getClientOriginalExtension();
+                                $filename           = time().'.' . $extension;
+                                $opt['file_name'][$i]->move(public_path('uploads/project/plan/'), $filename);
+                                $plan->file_name    = $filename;
+                            }
+                            $plan->plan_name                 = $opt['plan_name'][$i];
+                            $plan->project_id                = $id;
+                            $plan->cat_id                    = $category_id;
+                            $plan->save();
+                            
+                        }else{
+                            $plan                            = new Plan;
+                            if (array_key_exists('file_name',$opt)) {
+                                $extension = $opt['file_name'][$i]->getClientOriginalExtension();
+                                $filename = time().'.' . $extension;
+                                $opt['file_name'][$i]->move(public_path('uploads/project/plan/'), $filename);
+                                $plan->file_name = $filename;
+                            }
+                            $plan->plan_name                 = $opt['plan_name'][$i];
+                            $plan->project_id                = $id;
+                            $plan->cat_id                    = $category_id;
+                            $plan->save();
+                            
+                        }
+                    }
+                }
+                 return Redirect::route('admin_project_speces',$id)->with('success','Plan Successfully updated');
+        }
+        
+        $data['plans']              = Plan::where('project_id',$id)->groupBy('cat_id')->get();
+        $data['plan_category']      = [''=>'Select Plan Category'] + Plan_category::pluck('name','id')->all();
+        $data['projectDetails']     = Project::find($id);
+        //$this->get_pdf_dimensions(public_path('uploads/project/plan/'.$data['plans'][0]->file_name));
+        return view('admin.project.plan',$data);
+    }
+
+    public function plan_delete($id,$project_id){
+        $plan = Plan::find($id);
+        if(file_exists(public_path('uploads/project/plan/'.$plan->file_name)) && $plan->file_name != ''){
+            unlink(public_path('uploads/project/plan/'.$plan->file_name));
+        }
+        Plan::where('id',$id)->delete();
+        
+        return Redirect::route('admin_project_plans',array($project_id))->with('success','Plans deleted Successfully');
+    
+    }
+    
+    public function plan_cat_delete($cat_id, $project_id){
+        $plans = Plan::where('cat_id',$cat_id)->get();
+        foreach($plans as $plan){
+            if(file_exists(public_path('uploads/project/plan/'.$plan->file_name)) && $plan->file_name != ''){
+                unlink(public_path('uploads/project/plan/'.$plan->file_name));
+            }
+        }
+        Plan::where('cat_id',$cat_id)->delete();
+        
+        return Redirect::route('admin_project_plans',array($project_id))->with('success','Plans deleted Successfully');
+    }
+    public function speces_update(Request $request, $id){
+        $data                   = array();
+        if($request->action == "Process"){
+            
+            $validator = Validator::make($request->all(),$this->rules($request));
+            if($validator->fails()){
+                $message = $validator->messages();
+                return Redirect::back()->withErrors($validator);
+            }else{
+                for($i = 0; $i<count($request->name) ; $i++){
+                    if($request->speces_id[$i] != '' && isset($request->speces_id[$i] )){
+                        $specs                            = Specs::find($request->speces_id[$i]);
+                        dd($request->file_name[$i]);
+                        if ($request->hasFile('file_name.'.$i)) {
+                            if(file_exists(public_path('uploads/project/specs/'.$specs->file_name)) && $specs->file_name != ''){
+                                unlink(public_path('uploads/project/specs/'.$specs->file_name));
+                            }
+                            $extension = $request->file_name[$i]->getClientOriginalExtension();
+                            $filename = time().'.' . $extension;
+                            $request->file_name[$i]->move(public_path('uploads/project/specs/'), $filename);
+                            $specs->file_name = $filename;
+                        }
+                        
+                    }else{
+                        $specs                            = new Specs;
+                        
+                        if ($request->hasFile('file_name.'.$i)) {
+                            $extension = $request->file_name[$i]->getClientOriginalExtension();
+                            $filename = time().'.' . $extension;
+                            $request->file_name[$i]->move(public_path('uploads/project/specs/'), $filename);
+                            $specs->file_name = $filename;
+                        }
+                    
+                    }
+                    $specs->name                      = $request->name[$i];
+                    $specs->project_id                = $id;
+                    $specs->spec_cat_id               = $request->speces_category[$i];
+                    $specs->save();
+                }
+                return Redirect::route('admin_project')->with('success','Project Successfully updated');
+            }
+        }
+        $data['spece_category'] = [''=>'Select Category']+Specs_category::pluck('name','id')->all();
+        $data['speces']         = Specs::where('project_id',$id)->get();
+        $data['projectDetails'] = Project::find($id);
+    
+        return view('admin.project.speces',$data);
+    }
+    
+    public function rules($request)
+    {
+      $rules = '';
+      foreach($request->name as $key => $val)
+      {
+        $rules['name.'.$key] = 'required';
+      }
+      foreach($request->speces_category as $key => $val)
+      {
+        $rules['speces_category.'.$key] = 'required';
+      }
+      if(count($request->file_name) > 0){
+        foreach($request->file_name as $key => $val)
+        {
+          $rules['file_name.'.$key] = 'mimes:pdf';
+        }
+      }
+      return $rules;
+    }
+    //public function messages()
+    //{
+    //  $messages = [];
+    //  foreach($this->request->get('items') as $key => $val)
+    //  {
+    //    $messages['items.'.$key.'.max'] = 'The field labeled "Book Title '.$key.'" must be less than :max characters.';
+    //  }
+    //  return $messages;
+    //}
+    public function delete($id){
+        
+        $project = Project::find($id);
+        
+        if(file_exists(public_path('uploads/project/documents/'.$project->documents)) && $project->documents != ''){
+            unlink(public_path('uploads/project/documents/'.$project->documents));
+        }
+        
+        if(count($project->specs)>0){
+            foreach($project->specs as $specs){
+                if(file_exists(public_path('uploads/project/specs/'.$specs->file_name)) && $specs->file_name != ''){
+                    unlink(public_path('uploads/project/specs/'.$specs->file_name));
+                }
+            }
+        }
+        Project::where('id',$id)->delete();
+        
+        return Redirect::route('admin_project')->with('success','Project deleted Successfully');
+    
+        
+    
+    }
+    
+    public function delete_speces($id,$project_id){
+        $specs = Specs::find($id);
+        
+        if(file_exists(public_path('uploads/project/specs/'.$specs->file_name)) && $specs->file_name != ''){
+            unlink(public_path('uploads/project/specs/'.$specs->file_name));
+        }
+        Specs::where('id',$id)->delete();
+        
+        return Redirect::route('admin_project_speces',array($project_id))->with('success','Speces  deleted Successfully');
+    }
+    
+    public function edit(Request $request,$id){
+        $data                   = array();
+        if($request->action == "Process"){
+            $validator = Validator::make($request->all(),
+                                        ['name'            => 'required',
+                                         'category_id'     => 'required',
+                                         'type_id'         => 'required',
+                                         'bid_close_date'  => 'required',
+                                         'time_due'        => 'required',
+                                         'valuation'       => 'required',
+                                         'description'     => 'required']);
+           if($validator->fails()){
+               $message = $validator->messages();
+               return Redirect::back()->withErrors($validator)->withInput();
+           }else{
+               $project                            = Project::find($id);
+               $project->name                      = $request->name;
+               $project->category_id               = $request->category_id;
+               $project->type_id                   = $request->type_id;
+               $bid_close_date                     = explode('/',$request->bid_close_date);
+               $project->bid_close_date            = $bid_close_date[2].'-'.$bid_close_date[0].'-'.$bid_close_date[1];
+               $project->time_due                  = date('H:i:s',strtotime($request->time_due));
+               
+               if($request->pre_bid_meeting_date != ''){
+               $pre_bid_meeting_date               = explode('/',$request->pre_bid_meeting_date);
+               $project->pre_bid_meeting_date      = $pre_bid_meeting_date[2].'-'.$pre_bid_meeting_date[0].'-'.$pre_bid_meeting_date[1];
+               }
+               $project->pre_bid_meeting_time      = ($request->pre_bid_meeting_time !='')?date('H:i:s',strtotime($request->pre_bid_meeting_time)):'';
+               $project->valuation                 = $request->valuation;
+               $project->description               = $request->description;
+               $project->additional_comments       = $request->additional_comments;
+               
+               if ($request->hasFile('documents')) {
+                    if(file_exists(public_path('uploads/project/documents/'.$project->documents)) && $project->documents != ''){
+                        unlink(public_path('uploads/project/documents/'.$project->documents));
+                    }
+                   $extension = $request->documents->getClientOriginalExtension();
+                   $filename = time().'.' . $extension;
+                   $request->documents->move(public_path('uploads/project/documents/'), $filename);
+                   $project->documents = $filename;
+               }
+               $project->save();
+               
+               return Redirect::route('admin_project_awarded_to',array($project->id))->with('success','Details Updated Successfully!');
+           }
+        }
+
+        $data['category']       = [''=>'Select Category'] + Category::pluck('name','id')->all();
+        $data['type']           = [''=>'Select Type'] + Type::pluck('name','id')->all();
+        $data['projectDetails'] = Project::find($id);
+        
+        return view('admin.project.edit',$data);
+    }
+    
+    public function details($id){
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.details',$data);
+    }
+    public function awarded_to_view($id){
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.awarded_to_view',$data);
+    }
+    public function address_view($id){
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.address_view',$data);
+    }
+    public function principle_view($id){
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.principle_view',$data);
+    }
+    public function contrctor_view($id){
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.contrctor_view',$data);
+    }
+    public function plan_view($id){
+        
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.plan_view',$data);
+    }
+    public function speces_view($id){
+        $data['projectDetails'] = Project::find($id);
+        return view('admin.project.speces_view',$data);
+    }
+   
+    public function get_pdf_dimensions($path, $box="MediaBox") {
+        $stream = new \SplFileObject($path); 
+    
+        $result = false;
+    
+        while (!$stream->eof()) {
+            if (preg_match("/".$box."\[[0-9]{1,}.[0-9]{1,} [0-9]{1,}.[0-9]{1,} ([0-9]{1,}.[0-9]{1,}) ([0-9]{1,}.[0-9]{1,})\]/", $stream->fgets(), $matches)) {
+                $result["width"] = $matches[1];
+                $result["height"] = $matches[2]; 
+                break;
+            }
+        }
+    
+        $stream = null;
+    
+        dd($result);;
+    }
+    
+}

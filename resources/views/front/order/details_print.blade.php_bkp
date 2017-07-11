@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Order Invoice</title>
+</head>
+<body>
+
+<table cellspacing="0" border="0" align="center" width="100%;" cellspadding="0" style="font-family: 'arial', helvetica ,sans serif ;  color: #445461;">
+     <tr>
+        <td align="center" valign="middle" style="" >
+            <table border="0"  cellspacing="0" cellpadding="0" width="100%" letter-spacing: 0.5px; ">
+                <tr>
+                    <td border="0" colspan="4" style="line-height:10px; height:10px;background-color:#D3CDCD; border-top:2px solid #D3CDCD;
+                    border-bottom:2px solid #D3CDCD">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td border="0" colspan="4" align="center" style="background-color:#D3CDCD; border-top:2px solid #D3CDCD;
+                    border-bottom:2px solid #D3CDCD"><img src="{{asset('images/logo.png')}}" style="width:230px; border:0;"></td>
+                </tr>
+                 <tr>
+                    <td border="0" colspan="4" style="line-height:10px; height:10px;background-color:#D3CDCD; border-top:2px solid #D3CDCD;
+                    border-bottom:2px solid #D3CDCD">&nbsp;</td>
+                 </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td align="left" valign="middle" style="padding:15px 0; font-weight:600; font-size:18px;" >Welcome <span style="display:inline-block; color:#0c9ec3;vertical-align:bottom;">{{Session::get('USER_DETAILS')->first_name.' '.Session::get('USER_DETAILS')->last_name}}</span></td>
+    </tr>
+    <tr>
+        <td align="left" valign="middle" style=" padding-bottom:15px;">
+             <table border="0"  cellspacing="0" cellpadding="0" width="100%"  style=" padding:5px; font-size:15px;">
+                <tr>
+                   <td align="left" valign="middle" style="font-weight:bold;  text-transform:capitalize; width:20%; font-size:14px;  border-bottom:1px dashed #ccc; padding:5px ;">Order ID : </td>
+                   <td align="left" valign="middle" style="i text-transform:capitalize; border-bottom:1px dashed #ccc; padding:5px 0; font-size:12px;">{!! $details->order_id !!} </td>
+                </tr>
+                <tr>
+                   <td align="left" valign="middle" style="font-weight:bold; text-transform:capitalize; border-bottom:1px dashed #ccc; width:20%; font-size:14px; padding:5px;">Payment Type: </td>
+                   <td align="left" valign="middle" style=" text-transform:capitalize; border-bottom:1px dashed #ccc; padding:5px 0;  font-size:12px;">
+		    @if($details->order_type == 'cod')
+		      Cash On Delivary
+		    @elseif($details->order_type == 'my_account')
+		      My Account
+		    @else
+		      Credit Card
+		    @endif
+	    
+		   </td>
+                </tr>
+		@if($details->order_type == 'cc')
+                <tr>
+                   <td align="left" valign="middle" style="font-weight:bold; text-transform:capitalize; border-bottom:1px dashed #ccc; width:20%; font-size:14px;  padding:5px ;">Transaction ID : </td>
+                   <td align="left" valign="middle" style=" text-transform:capitalize; border-bottom:1px dashed #ccc; padding:5px 0;  font-size:12px;">60016255135 </td>
+                </tr>
+		@endif
+                    <tr>
+                   <td align="left" valign="middle" style="font-weight:bold; text-transform:capitalize; border-bottom:1px dashed #ccc; width:20%; font-size:14px;  padding:5px;">Delivery Type  : </td>
+                   <td align="left" valign="middle" style="border-bottom:1px dashed #ccc; padding:5px 0;  font-size:12px;">
+		   @if($details->delivery_type == 'store_location')
+			{{ 'Store Location Pickup' }}
+		    @elseif($details->delivery_type == 'local_delivery')
+			{{'Local Delivery'}}
+		    @else
+		      N/A
+		    @endif
+		  </td>
+                </tr>
+                <tr>
+                   <td align="left" valign="middle" style="font-weight:bold; text-transform:capitalize; border-bottom:1px dashed #ccc; width:20%; font-size:14px;  padding:5px ;">Delivery Details  </td>
+                    <td align="left" valign="middle" style=" text-transform:capitalize; border-bottom:1px dashed #ccc; padding:5px 0;  font-size:12px;">	&nbsp; </td>
+                </tr>
+		@if($details->delivery_type == 'store_location')
+		<tr>
+		  <td align="left" valign="middle" style="font-weight:bold; text-transform:capitalize; width:20%; font-size:14px; padding:5px;"> Pickup Location: </td>
+		  <td align="left" valign="middle" style=" text-transform:capitalize;  padding:5px 0;  font-size:12px;">{!! $details->pickup_location !!}</td>
+		</tr>
+		@elseif($details->delivery_type == 'local_delivery')
+		<tr>
+		  <td align="left" valign="middle" style="font-weight:bold; text-transform:capitalize; width:20%; font-size:14px; padding:5px;"> Address: </td>
+		  <td align="left" valign="middle" style=" text-transform:capitalize;  padding:5px 0;  font-size:12px;">
+		  {!! ($details->address != '')?$details->address.'<br>':''; !!}
+		  {!! ($details->city != '')?$details->city.',':''; !!}
+		  {!! (count($details->state_name) > 0)?$details->state_name->state.',':'' !!}
+		  {!! ($details->zip != '')?$details->zip:''; !!}
+		  </td>
+		</tr>
+		@endif
+             </table>
+        </td>
+    </tr>
+     <tr>
+        <td align="left" valign="middle" style="">
+          <table  border="0"  cellspacing="0" cellpadding="0" width="100%" style="padding:10px 0 20px;"  >
+            <thead style="background:#D3CDCD; color:#000; font-size:14px; border:1px solid #D3CDCD;">
+              <tr>
+                <th align="left" valign="middle" style="width:70%; padding:5px; ">Project #</th>
+                <th align="left" valign="middle" style="width:20%; padding:5px ;">Size/Download</th>
+                <th align="left" valign="middle" style="width:10%; padding:5px; ">QTY</th>
+              </tr>
+            </thead>
+	    @if(count($details->order) > 0 )
+	    @php $data = '' @endphp
+	    @foreach($details->order as $ord)
+		@php
+		$data[$ord->project_id][] = $ord;
+		@endphp
+	    @endforeach
+	    @if(count($data) > 0)
+	    <tbody style="display:none">
+	    <tr> <td colspan="3"><input type="hidden" name="orderDetailsJSON" value="{{ json_encode($data) }}" /></td><tr/>
+	    </tbody>
+	    @foreach($data as $k=>$d)		  
+            <tbody style=" font-size:13px;" data-id="{{ $k }}" class="orderProjects">
+	     @php $i = 0; $j=0 @endphp	
+	      <tr>
+                <td align="left" valign="middle" style="width:70%; padding:5px; border:1px solid #ccc; border-top:none;">
+                Documents for project {{$d[0]->project->project_id .'-' .$d[0]->project->name }} </td>
+                <td align="left" valign="middle" style="width:20%; padding:5px; border:1px solid #ccc; border-top:none;">
+                <a href="#" style="color:#e34838; text-decoration:none; cursor:pointer;"></a> </td>
+                <td align="left" valign="middle" style="width:10%; padding:5px; border:1px solid #ccc; border-top:none;">&nbsp;</td>
+              </tr>
+	      @foreach($d as $c)
+	      @php $i++ @endphp
+              <tr class="projectPlans" data-parent="{{ $c->project->project_id }}" data-plan-name="{{$c->plan->plan_name}}">
+                <td align="left" valign="middle" style="width:70%; padding:5px; border:1px solid #ccc; border-top:none;">{{$c->plan->plan_name}} </td>
+                <td align="left" valign="middle" style="width:20%; padding:5px; border:1px solid #ccc; border-top:none;">
+		@if($c->order_type == 'full_size')
+		  Full Size
+		@elseif($c->order_type == 'half_size')
+		  Half Size
+		@elseif($c->order_type == 'full_set')
+		  Full Set
+		@else
+		    {{$c->order_type}}
+		@endif
+		</td>
+                <td align="left" valign="middle" style="width:10%; padding:5px; border:1px solid #ccc; border-top:none;">{!! $c->quantity !!}</td>
+              </tr>
+	      @endforeach
+            </tbody>
+		  @endforeach
+	      @endif
+	@endif
+           </table>     
+        </td>    
+    </tr>
+    <tr>
+        <td align="left" valign="middle">
+            <table  border="0"  cellspacing="0" cellpadding="0" width="100%" style="">
+            <tr>
+                <td align="right" valign="middle" style="width:70%; padding:5px; border:1px solid #ccc; font-weight:600;">Sub Total :  </td>
+                <td align="right" valign="middle" style="width:30%; padding:5px; border:1px solid #ccc; ">{{ number_format($details->total_price,2) }}</td>
+              </tr>
+            <tr>
+                <td align="right" valign="middle" style="width:70%; padding:5px; border:1px solid #ccc; border-top:none; font-weight:600;">Tax :   </td>
+                <td align="right" valign="middle" style="width:30%; padding:5px; border:1px solid #ccc; border-top:none;">{{ number_format($details->tax,2) }}  </td>
+            </tr>
+            <tr>
+                <td align="right" valign="middle" style="width:70%; padding:5px; border:1px solid #ccc; border-top:none; font-weight:600;">Total : </td>
+                <td align="right" valign="middle" style="width:30%; padding:5px; border:1px solid #ccc; border-top:none;">{{number_format(($details->total_price + $details->tax),2)}} </td>
+              </tr>
+            <tr>
+                <td align="right" valign="middle" style="width:70%; padding:5px; border:1px solid #ccc; border-top:none; font-weight:600;">Payment Method :    </td>
+                <td align="right" valign="middle" style="width:30%; padding:5px; border:1px solid #ccc; border-top:none;">
+		  @if($details->order_type == 'my_account')
+		      My account
+		    @elseif($details->order_type == 'cc')
+		      Credit Credit
+		    @elseif($details->order_type == 'cod')
+		      Cash on Delivery
+		    @endif
+		</td>
+            </tr>
+            </table>
+        </td>
+    </tr>
+
+</table>
+</body

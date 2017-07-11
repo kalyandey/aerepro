@@ -1,0 +1,112 @@
+<div class="topheader clear">      
+  <div class="container">
+    <div class="logobox">
+    <!--
+      @if(Session::has('USER_DETAILS') && Session::get('USER_DETAILS') != '')
+        <a href="{{URL::route('dashboard')}}">
+      @elseif(Session::has('PRIVATE_COMPANY_DETAILS') && Session::get('PRIVATE_COMPANY_DETAILS')->id != '')
+        <a href="{{URL::route('public_planroom_list_for_company',Session::get('COMPANY_SLUG'))}}">
+      @elseif(Session::has('PRIVATE_USER_DETAILS') && Session::get('PRIVATE_USER_DETAILS') != '')
+        <a href="{{URL::route('public_planroom_list_for_user',Session::get('COMPANY_SLUG'))}}">
+      @else
+        <a href="{{URL::route('planroom')}}">
+      @endif
+      -->
+      <a href="{{Config::get('constant.w_link')}}">
+      <img src="{{asset('images/logo.png')}}" alt="logo" /></a>
+    </div>
+    <div class="topright clear">
+      <ul class="social clear">
+        <li class="fb"><a target="_blank" href="https://www.facebook.com/">facebook</a></li>
+        <li class="gp"><a target="_blank" href="https://plus.google.com/">googleplus</a></li>
+      </ul>
+      <a class="contactno" href="tel:9284429116">(928) 442-9116</a>
+      <br />
+      <a href="{{Config::get('constant.w_link').'send-us-files'}}" class="btn-sendus">Send us files</a>
+        
+    </div>
+  </div>      
+</div>
+<div id="navbar" class="navbar">
+  <nav id="site-navigation" class="navigation main-navigation" role="navigation">
+    <button class="menu-toggle">Menu</button>
+    <a class="screen-reader-text skip-link" href="#content" title="Skip to content">Skip to content</a>
+    <div class="nav-menu">
+      <ul>
+        <li><a href="{{Config::get('constant.w_link')}}">Home</a></li>
+        <li><a href="javascript:void(0);">Printing Services</a>
+          <ul class="children">
+            <li><a href="{{Config::get('constant.w_link').'printing-services'}}">Printing Services</a></li>
+            <li><a href="{{Config::get('constant.w_link').'signs-and-graphics'}}">Signs and Graphics</a></li>
+          </ul>
+        </li>
+        <li class="current_page_item"><a href="{{URL::route('planroom')}}">Planroom</a>
+            <ul class="children">
+                @if(Session::has('USER_DETAILS') && Session::get('USER_DETAILS') != '')
+                  
+                @if(Session::get('USER_DETAILS')->subscription_id != '' && in_array('1',explode(',',Session::get('USER_DETAILS')->subscription_id)))
+                <li><a href="{{URL::route('planroom_list')}}">Project List</a></li>
+                @endif
+                @if(Session::get('USER_DETAILS')->subscription_id != '' && (in_array('2',explode(',',Session::get('USER_DETAILS')->subscription_id)) || in_array('3',explode(',',Session::get('USER_DETAILS')->subscription_id))))
+                <li>
+                <a href="{{URL::route('building_report')}}">Building Reports</a>
+                <ul class="planroom-sub-menu">
+                  @if(count(Helpers::getSelectedCounty())>0 )
+                    @foreach(Helpers::getSelectedCounty() as $c)
+                      
+                    @if(Session::get('USER_DETAILS')->subscription_id != '' && ((in_array('2',explode(',',Session::get('USER_DETAILS')->subscription_id)) && $c->id == 3) || (in_array('3',explode(',',Session::get('USER_DETAILS')->subscription_id)) && $c->id == 14)))
+                    <li><a href="{{URL::route('building_report').'?county='.$c->id}}">{{$c->name}}</a></li>
+                    @endif
+                    @endforeach
+                  @endif
+                </ul>
+                </li>
+                @endif
+                <li><a href="{{URL::route('calendar')}}">Calendar</a></li>
+                <!--<li><a href="{{URL::route('order_report')}}">Order Details</a></li>-->
+                
+                @elseif(Session::has('PRIVATE_COMPANY_DETAILS') && Session::get('PRIVATE_COMPANY_DETAILS') != '')
+                <li><a href="{{URL::route('public_planroom_list_for_company',Session::get('COMPANY_SLUG'))}}">Project List</a></li>
+                <li><a href="{{URL::route('private_order_report',Session::get('COMPANY_SLUG'))}}">Order Details</a></li>
+                <li><a href="{{URL::route('email_campaign_list_for_company',Session::get('COMPANY_SLUG'))}}">Email Campaign</a></li>
+                @elseif(Session::has('PRIVATE_USER_DETAILS') && Session::get('PRIVATE_USER_DETAILS') != '')
+                <li><a href="{{URL::route('public_planroom_list_for_user',Session::get('COMPANY_SLUG'))}}">Project List</a></li>
+                <li><a href="{{URL::route('private_order_report',Session::get('COMPANY_SLUG'))}}">Order Details</a></li>
+                @endif
+                
+              </ul>
+        </li>
+        <li><a href="{{Config::get('constant.w_link').'equipment-and-supplies'}}">Equipment and Supplies</a></li>
+        <li><a href="{{Config::get('constant.w_link').'about-us'}}">About Us</a></li>
+        <li><a href="{{Config::get('constant.w_link').'contact-us'}}">Contact Us</a></li>
+         @if(Session::has('USER_DETAILS') && Session::get('USER_DETAILS')->id != '')
+        <li><a href="javascript:void(0);">Settings</a>
+            <ul class="children">
+                <li><a href="{{URL::route('edit_customer_profile')}}">My Profile</a></li>
+                <li><a href="{{URL::route('change_password')}}">Change Password</a></li>
+                <li><a href="{{URL::route('cancel_payment')}}">Cancel Payment</a></li>
+                <li><a href="{{URL::route('logout')}}">Logout</a></li>
+            </ul>
+        </li>
+        @endif
+        @if(Session::has('PRIVATE_COMPANY_DETAILS') && Session::get('PRIVATE_COMPANY_DETAILS')->id != '')
+        <li><a href="javascript:void(0);">Settings</a>
+            <ul class="children">
+                <li><a href="{{URL::route('profile_edit_for_company',Session::get('COMPANY_SLUG'))}}">My Profile</a></li>
+                <li><a href="{{URL::route('private_change_password',Session::get('COMPANY_SLUG'))}}">Change Password</a></li>
+                <li><a href="{{URL::route('privateplanroomlogout',Session::get('COMPANY_SLUG'))}}">Logout</a></li>
+            </ul>
+        </li>
+        @elseif(Session::has('PRIVATE_USER_DETAILS') && Session::get('PRIVATE_USER_DETAILS')->id != '')
+        <li><a href="javascript:void(0);">Settings</a>
+            <ul class="children">
+                <li><a href="{{URL::route('profile_edit_for_user',Session::get('COMPANY_SLUG'))}}">My Profile</a></li>
+                <li><a href="{{URL::route('private_change_password',Session::get('COMPANY_SLUG'))}}">Change Password</a></li>
+                <li><a href="{{URL::route('privateplanroomlogout',Session::get('COMPANY_SLUG'))}}">Logout</a></li>
+            </ul>
+        </li>
+        @endif
+      </ul>
+    </div>
+  </nav>
+</div>

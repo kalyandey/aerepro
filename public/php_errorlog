@@ -1,0 +1,11 @@
+[02-Nov-2016 04:56:30 America/Chicago] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/southw17/public_html/aereprotest1.com/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php on line 475
+[02-Nov-2016 04:56:42 America/Chicago] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/southw17/public_html/aereprotest1.com/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php on line 475
+[03-Nov-2016 07:22:06 UTC] PHP Fatal error:  Call to undefined function App\Http\Controllers\ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 07:22:49 UTC] PHP Fatal error:  Call to undefined function App\Http\Controllers\ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 12:54:53 UTC] PHP Fatal error:  Call to undefined function App\Http\Controllers\ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 12:57:42 UTC] PHP Fatal error:  Call to undefined function ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 13:02:08 UTC] PHP Fatal error:  Call to undefined function ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 13:12:35 UTC] PHP Fatal error:  Call to undefined function ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 13:58:23 UTC] PHP Fatal error:  Call to undefined function ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 13:58:37 UTC] PHP Fatal error:  Call to undefined function ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20
+[03-Nov-2016 14:03:01 UTC] PHP Fatal error:  Call to undefined function ssh2_connect() in /home/southw17/public_html/aereprotest1.com/app/Http/Controllers/Controller.php on line 20

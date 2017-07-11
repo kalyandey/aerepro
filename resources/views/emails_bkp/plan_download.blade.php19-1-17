@@ -1,0 +1,184 @@
+Hello,
+<br><br>
+<table align="center" style="border-spacing: 0; text-align:center; font-family:arial, helvetica,sans-serif; font-size:14px; line-height:2;width="87%">
+    <tr>
+        <td width="45%">
+            <table width="100%">
+                <tr>
+                    <td>ID</td>
+                    <td>{{$order_master->order_id}}</td>
+                </tr>
+                <tr>
+                    <td>Transection ID</td>
+                    <td>{{($order_master->transaction_id != '')?$order_master->transaction_id:'N/A'}}</td>
+                </tr>
+                <tr>
+                    <td>Delivery Type</td>
+                    <td>
+                        @if($order_master->delivery_type == 'store_location')
+                            Store Location
+                        @elseif($order_master->delivery_type == 'local_delivery')
+                            Local Delivery
+                        @else
+                            N/A
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <td>Delivery Details</td>
+                    <td>
+                        @if($order_master->delivery_type == 'store_location')
+                            {{$order_master->pickup_location}}
+                        @elseif($order_master->delivery_type == 'local_delivery')
+                            {{$order_master->address}}
+                             <br>
+                            @if($order_master->city != '')
+                            {{ $order_master->city.',' }}
+                            @endif
+                            @if(count($order_master->state_name) > 0)
+                            {{ $order_master->state_name->state.',' }}
+                            @endif
+                            @if($order_master->zip != '')
+                            {{ $order_master->zip.',' }}
+                            @endif
+                        @else
+                            N/A
+                        @endif
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td width="30%"></td>
+        <td width="35%">
+            <table width="100%" style="text-align:left;">
+                <tr><td><h3>Customer Information</h3></td></tr>
+                <tr><td><b>A&E Reprographics</b></td></tr>
+                <tr><td>{{$user->first_name .' '.$user->last_name }}</td></tr>
+                <tr><td>
+                {{$user->addess_line1}}
+                @if($user->addess_line2 != '')
+                {{','.$user->addess_line2}}
+                @endif
+                <br>
+                @if($user->city != '')
+                {{ $user->city.',' }}
+                @endif
+                @if(count($user->state_name) > 0)
+                {{ $user->state_name->state.',' }}
+                @endif
+                @if($user->zip != '')
+                {{ $user->zip.',' }}
+                @endif
+                </td></tr>
+                <tr><td>&nbsp;</td></tr>
+                <tr><td>{{$user->phone}}</td></tr>
+                <tr><td>{{$user->email}}</td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<table align="center" style="border-spacing: 0;  border-right:1px solid #ccc; text-align:center; font-family:arial, helvetica,sans-serif; font-size:14px; line-height:2; text-transform:capitalize;">
+    <tr>
+        <th style="border-left:1px solid #ccc; padding:8px 10px; background:#001f5b; color:#fff; font-weight:500; margin:0; text-transform:uppercase;">Job#</th>
+        <th style="border-left:1px solid #ccc; padding:8px 10px; background:#001f5b; color:#fff; font-weight:500; margin:0; text-transform:uppercase;">Document</th>
+        <th style="border-left:1px solid #ccc; padding:8px 10px; background:#001f5b; color:#fff; font-weight:500; margin:0; text-transform:uppercase;">Size/Download</th>
+        <th style="border-left:1px solid #ccc; padding:8px 10px; background:#001f5b; color:#fff; font-weight:500; margin:0; text-transform:uppercase;">Shipping</th>
+        <th style="border-left:1px solid #ccc; padding:8px 10px; background:#001f5b; color:#fff; font-weight:500; margin:0; text-transform:uppercase;">QTY</th>
+        <th style="border-left:1px solid #ccc; padding:8px 10px; background:#001f5b; color:#fff; font-weight:500; margin:0; text-transform:uppercase;">Price</th>
+        <!--<th style="border-left:1px solid #ccc; padding:8px 10px; background:#001f5b; color:#fff; font-weight:500; margin:0; text-transform:uppercase;">File</th>-->
+    </tr>
+    @if(count($cart_item) > 0)
+    @php $data = '' @endphp
+    @foreach($cart_item as $cart)
+        @php
+        $data[$cart->options->project_id][] = $cart;
+        @endphp
+    @endforeach
+
+
+    @if(count($data) > 0)
+        
+        @foreach($data as $k=>$d)
+            @php $i = 0 @endphp
+            @foreach($d as $c)
+            @php $i++ @endphp
+            <tr>
+                <td style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;">{{ $k }}</td>
+                <td style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;">{{ ($i<10)?'0'.$i:$i }} {{$c->name}}</td>
+                <td style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;">
+                @if($c->options->papersize == 'full_size')
+                    {{'Full Size'}}
+                @elseif($c->options->papersize == 'half_size')
+                    {{'Half size'}}
+                @elseif($c->options->papersize == 'full_set ')
+                    {{'Full Set'}}
+                @else
+                    {{$c->options->papersize}}
+                @endif
+                </td>
+                <td style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;">
+                @if($delivery_type == 'store_location')
+                        <div>Store Location Pickup</div>
+                        <div>Pickup Location : {{$pickup_location}}</div>
+                @elseif($delivery_type == 'local_delivery')
+                    <div>Local Delivery</div>
+                    <div>Address : {{$address}}</div>
+                    <div>City : {{$city}}</div>
+                    <div>States : {{$states}}</div>
+                    <div>Zip : {{$zip}}</div>
+                @else
+                    <div>Download link will become available after successful payment.</div>
+                @endif
+                </td>
+                <td style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;">{!! $c->qty !!}</td>
+                <td  style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;">$
+                {!! number_format((($c->qty * $c->price)+$tax),2) !!}</td>
+                <!--<td style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;">
+                    @php $filename = App\Plan::find($c->id)->file_name; @endphp
+                    @if(Helpers::isFileExist('uploads/project/plan/'.$filename) && $filename != '')
+                        <a target="_blank" href="{{Helpers::isFileExist('uploads/project/plan/'.$filename)}}"><b>view</b></a>
+                    @endif
+                </td>-->
+            </tr>
+            @endforeach
+        @endforeach
+        <tr><td align="right" colspan="7" style="background:#eee; font-weight:600; color:#000; padding:1px 10px;border-left:1px solid #ccc; border-bottom:1px solid #ccc;">Total : {!! number_format((\Cart::subtotal() + $tax),2) !!}</td></tr>
+    @endif
+@else
+    <tr><td style="border-left:1px solid #ccc; padding:8px 10px; color:#333; margin:0; border-bottom:1px solid #ccc;" colspan="7">No record found</td></tr>
+@endif
+</table>
+
+<table width="87%" align="center">
+    @if($order_master->tax != '')
+    <tr>
+        <td><b>Sub Total : </b></td>
+        <td><b>{{$order_master->total_price}}</b></td>
+    </tr>
+    <tr>
+        <td><b>Tax({{$setting_tax}}) : </b></td>
+        <td><b>{{$order_master->tax}}</b></td>
+    </tr>
+    <tr>
+        <td><b>Total Amount : </b></td>
+        <td><b>{{$order_master->total_price + $order_master->tax}}</b></td>
+    </tr>
+    <tr>
+        <td><b>Payment Type : </b></td>
+        <td>
+        @if($order_master->order_type == 'cod')
+            Cash on delivery
+        @elseif($order_master->order_type == 'cc')
+            Credit Card
+        @elseif($order_master->order_type == 'my_account')
+            My Account
+        @endif
+        </td>
+    </tr>
+    @endif
+</table>
+<br><br>
+Thanks & Regards
+<br>
+aerepro
+<br>

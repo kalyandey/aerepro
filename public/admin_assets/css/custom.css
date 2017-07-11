@@ -1,0 +1,39 @@
+.allViewSection div.box-heading {
+	font:700 14px/18px "Open Sans", Sans sarif;
+	margin: 0;
+}
+.allViewSection h5 {
+	font: 14px/18px "Open Sans", Sans sarif;
+	margin: 0;
+}
+.allViewSection .col-md-4 {
+    font: 14px/18px "Open Sans",Sans sarif;
+    margin: 0;
+    padding: 10px 0;
+	min-height: 36px;
+}
+.allViewSection > .col-md-12  {
+	padding-top:8px; 
+	padding-bottom:8px;
+	border-bottom: 1px solid #ddd;	
+}
+.form-actions > .col-md-12 {
+	padding:15px 0 0;
+}
+.allViewSection {
+	padding-top: 15px;
+}
+.topTabText a {
+	font-size: 12px;
+}
+/*input[type=file] {
+	height: auto !important;
+}*/
+.alert {clear: both;}
+.alert ul { list-style: none;}
+
+.ui-menu-item { background: #efefef; border-bottom: 1px solid #ccc; transition: all 0.5s ease-in-out 0s; -moz-transition: all 0.5s ease-in-out 0s; -webkit-transition: all 0.5s ease-in-out 0s; padding: 3px 10px !important;}
+.ui-menu-item:last-child { border-bottom: none;}
+.ui-menu .ui-menu-item:hover{ background-color: #dbdbdb;}
+.add_new_bidder{clear:both}
+.hide{ display: none }
